@@ -1,0 +1,45 @@
+spring:
+  jpa:
+    open-in-view: false
+    show-sql: true
+    properties:
+      "[hibernate.dialect]": org.hibernate.dialect.MySQLDialect
+      "[hibernate.generate.statistics]": false
+      "[hibernate.connection.provider_disables_autocommit]": true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+
+  flyway:
+    url: ${mysql.url:jdbc:mysql://gatnix-mysql-db.cbzi61rt89sh.us-east-1.rds.amazonaws.com:3306/gatnix-scheduler-db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+#    url: ${mysql.url:jdbc:mysql://localhost:3306/gatnix_scheduler_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    user: "admin"
+    password: "123Atlanta%"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    enabled: false
+
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+
+  datasource:
+    url: ${mysql.url:jdbc:mysql://gatnix-mysql-db.cbzi61rt89sh.us-east-1.rds.amazonaws.com:3306/gatnix-email-scheduler-db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+#    url: ${mysql.url:jdbc:mysql://localhost:3306/gatnix-scheduler-db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: "admin"
+    password: "123Atlanta%"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      auto-commit: false
+      connection-timeout: 250 # é feito em miliseconds. O ideal é manter baixo para estorar timeout
+      max-lifetime: 600000 #tempo adviso que uso conexão pode ficar aberto (19mins) - security
+      maximum-pool-size: 10 #numero até o max 20 conexões com o banco de dados. O ideal é manter baixo
+      minimum-idle: 5
+      pool-name: master
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    feign: DEBUG
+
+server:
+  port: 8080
