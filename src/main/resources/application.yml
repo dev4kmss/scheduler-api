@@ -11,10 +11,9 @@ spring:
       ddl-auto: update
 
   flyway:
-    url: ${mysql.url:jdbc:mysql://gatnix-mysql-db.cbzi61rt89sh.us-east-1.rds.amazonaws.com:3306/gatnix-scheduler-db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-#    url: ${mysql.url:jdbc:mysql://localhost:3306/gatnix_scheduler_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    url: ${mysql.url:jdbc:mysql://scheduler-app-mysql.cpmg8kis00t5.ap-south-1.rds.amazonaws.com:3306/scheduler_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     user: "admin"
-    password: "123Atlanta%"
+    password: "gKmptQyJycc8w1wFiWdg"
     driver-class-name: com.mysql.cj.jdbc.Driver
     enabled: false
 
@@ -23,10 +22,9 @@ spring:
       matching-strategy: ANT_PATH_MATCHER
 
   datasource:
-    url: ${mysql.url:jdbc:mysql://gatnix-mysql-db.cbzi61rt89sh.us-east-1.rds.amazonaws.com:3306/gatnix-email-scheduler-db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
-#    url: ${mysql.url:jdbc:mysql://localhost:3306/gatnix-scheduler-db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    url: ${mysql.url:jdbc:mysql://scheduler-app-mysql.cpmg8kis00t5.ap-south-1.rds.amazonaws.com:3306/scheduler_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     username: "admin"
-    password: "123Atlanta%"
+    password: "gKmptQyJycc8w1wFiWdg"
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       auto-commit: false

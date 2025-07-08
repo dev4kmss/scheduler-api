@@ -9,5 +9,4 @@ import com.stackabuse.entity.SchedulerJobInfo;
 public interface SchedulerRepository extends JpaRepository<SchedulerJobInfo, Long> {
 
 	SchedulerJobInfo findByJobName(String jobName);
-
 }
