@@ -49,7 +49,18 @@ public class JobController {
 		return message;
 	}
 
-
+	@PostMapping("/scheduleOneTime")
+	public Object scheduleOneTime(@RequestBody SchedulerJobInfo job) {
+		Message message = Message.failure();
+		try {
+			scheduleJobService.scheduleOneTimeJob(job);
+			message = Message.success();
+		} catch (Exception e) {
+			message.setMsg(e.getMessage());
+			log.error("Error scheduling one-time job", e);
+		}
+		return message;
+	}
 
 	@GetMapping("/metaData")
 	public Object metaData() throws SchedulerException {
