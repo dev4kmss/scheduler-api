@@ -211,44 +211,111 @@ public class SchedulerJobService {
 	/**
 	 * Schedule a job to fire exactly once at the specified time.
 	 */
+
 	@Transactional
 	public void scheduleOneTimeJob(SchedulerJobInfo jobInfo) {
 		Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
-		// Validate
+		// ✅ Validate
 		if (jobInfo.getRunAtTimestamp() == null) {
 			throw new IllegalArgumentException("runAtTimestamp is required.");
 		}
 
-		// Ensure payload is always valid
+		// ✅ Ensure payload is valid
 		if (!StringUtils.hasText(jobInfo.getPayload())) {
 			jobInfo.setPayload("{}");
 		}
 
-		JobDetail jobDetail = scheduleCreator.createJob(
-				GenericHttpJob.class,
-				false,
-				context,
-				jobInfo.getJobName(),
-				jobInfo.getJobGroup(),
-				jobInfo.getOrgId(),
-				jobInfo.getPayload()
-		);
-
-		Trigger trigger = scheduleCreator.createSimpleTrigger(
-				jobInfo.getJobName(),
-				new Date(jobInfo.getRunAtTimestamp()),
-				0L,
-				SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW
-		);
+		String jobName = jobInfo.getJobName();
+		String jobGroup = jobInfo.getJobGroup();
 
 		try {
+			JobKey jobKey = new JobKey(jobName, jobGroup);
+
+			// 🔍 Check if the job already exists
+			if (scheduler.checkExists(jobKey)) {
+				// 🗑️ Delete from Quartz
+				scheduler.deleteJob(jobKey);
+
+				// 🗑️ Delete from DB
+				SchedulerJobInfo existing = schedulerRepository.findByJobName(jobName);
+				if (existing != null) {
+					schedulerRepository.delete(existing);
+				}
+
+				log.info("Deleted existing job: {}", jobName);
+			}
+
+			// ✅ Create fresh JobDetail
+			JobDetail jobDetail = scheduleCreator.createJob(
+					GenericHttpJob.class,
+					false,
+					context,
+					jobName,
+					jobGroup,
+					jobInfo.getOrgId(),
+					jobInfo.getPayload()
+			);
+
+			// ✅ Create trigger
+			Trigger trigger = scheduleCreator.createSimpleTrigger(
+					jobName,
+					new Date(jobInfo.getRunAtTimestamp()),
+					0L,
+					SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW
+			);
+
+			// ✅ Schedule new job
 			scheduler.scheduleJob(jobDetail, trigger);
+
 			jobInfo.setJobStatus("SCHEDULED");
 			schedulerRepository.save(jobInfo);
+
+			log.info("Scheduled one-time job: {}", jobName);
+
 		} catch (SchedulerException e) {
+			log.error("Error scheduling one-time job: {}", jobName, e);
 			throw new RuntimeException("Error scheduling job", e);
 		}
 	}
+
+	public void scheduleRecurringJobBetween(SchedulerJobInfo jobInfo) {
+		try {
+			Scheduler scheduler = schedulerFactoryBean.getScheduler();
+
+			if (!StringUtils.hasText(jobInfo.getPayload())) {
+				jobInfo.setPayload("{}");
+			}
+
+			JobDetail jobDetail = scheduleCreator.createJob(
+					GenericHttpJob.class,
+					false,
+					context,
+					jobInfo.getJobName(),
+					jobInfo.getJobGroup(),
+					jobInfo.getOrgId(),
+					jobInfo.getPayload()
+			);
+
+			Date start = jobInfo.getStartTime() != null ? new Date(jobInfo.getStartTime()) : new Date();
+			Date end = jobInfo.getEndTime() != null ? new Date(jobInfo.getEndTime()) : null;
+
+			Trigger trigger = TriggerBuilder.newTrigger()
+					.withIdentity(jobInfo.getJobName(), jobInfo.getJobGroup())
+					.startAt(start)
+					.endAt(end)
+					.withSchedule(CronScheduleBuilder.cronSchedule(jobInfo.getCronExpression())
+							.withMisfireHandlingInstructionFireAndProceed())
+					.build();
+
+			scheduler.scheduleJob(jobDetail, trigger);
+			jobInfo.setJobStatus("SCHEDULED");
+			schedulerRepository.save(jobInfo);
+
+		} catch (SchedulerException e) {
+			throw new RuntimeException("Error scheduling recurring job", e);
+		}
+	}
+
 
 }

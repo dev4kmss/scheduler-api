@@ -2,6 +2,7 @@ package com.stackabuse.controller;
 
 import com.stackabuse.dto.RescheduleOneTime;
 import com.stackabuse.dto.ScheduleOneTimeRequest;
+import com.stackabuse.dto.ScheduleRecurringRequest;
 import com.stackabuse.entity.Message;
 import com.stackabuse.entity.SchedulerJobInfo;
 import com.stackabuse.repository.SchedulerRepository;
@@ -105,6 +106,31 @@ public class JobController {
 		Message message = Message.failure();
 		if (scheduleJobService.deleteJob(jobName)) {
 			message = Message.success();
+		}
+		return message;
+	}
+
+
+	@PostMapping("/scheduleRecurringBetween")
+	public Object scheduleRecurringBetween(@RequestBody ScheduleRecurringRequest request) {
+		Message message = Message.failure();
+		try {
+			SchedulerJobInfo job = new SchedulerJobInfo();
+			job.setJobName(request.getJobName());
+			job.setJobGroup(request.getJobGroup());
+			job.setDescription(request.getDescription());
+			job.setOrgId(request.getOrgId());
+			job.setPayload(request.getPayload());
+			job.setCronExpression(request.getCronExpression());
+			job.setCronJob(true);
+			job.setStartTime(request.getStartTime());
+			job.setEndTime(request.getEndTime());
+
+			scheduleJobService.scheduleRecurringJobBetween(job);
+			message = Message.success();
+		} catch (Exception e) {
+			message.setMsg(e.getMessage());
+			log.error("Error scheduling recurring job", e);
 		}
 		return message;
 	}
